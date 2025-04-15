@@ -14,7 +14,7 @@ import time
 
 from wrappers import *
 
-# 配置 logging，既写入文件又输出到终端
+# logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
