@@ -12,14 +12,14 @@ import time
 import cv2
 from gym.wrappers import TimeLimit
 
-# ===========================
-# 1️⃣ 配置超参数
-# ===========================
+
+# 1. Hyperparameters
+
 GAMMA = 0.99
 LR = 1e-4
 EPSILON_START = 1.0
 EPSILON_END = 0.1
-EPSILON_DECAY = 30000  # 🔥 让 ε 下降更慢，防止过早收敛
+EPSILON_DECAY = 30000  # Slower epsilon decay to avoid early convergence
 BATCH_SIZE = 64
 MEMORY_SIZE = 50000
 TARGET_UPDATE = 1000
@@ -27,11 +27,11 @@ MAX_STEPS = 5000
 NUM_EPISODES = 1000
 SAVE_PATH = './train.model'
 
-# ===========================
-# 2️⃣ 自定义 Frame Skip
-# ===========================
+
+# 2. Custom Frame Skip Wrapper
+
 class CustomFrameSkip(gym.Wrapper):
-    def __init__(self, env, skip=4):  # 🔥 改成 skip=4 让 AI 更精准控制
+    def __init__(self, env, skip=4):  # Use 4-frame skip for smoother control
         super().__init__(env)
         self._skip = skip
 
@@ -44,20 +44,20 @@ class CustomFrameSkip(gym.Wrapper):
                 break
         return obs, total_reward, done, info
 
-# ===========================
-# 3️⃣ 创建环境
-# ===========================
+
+# 3. Create Environment
+
 def make_env(episode):
     env = gym.make('SuperMarioBros-v0')
     env = JoypadSpace(env, SIMPLE_MOVEMENT)
-    env = CustomFrameSkip(env, skip=4)  # 🔥 降低 frameskip，提高 AI 控制精度
-    env = TimeLimit(env, max_episode_steps=2000)  # 🔥 让 AI 适应更长时间的游戏
-    env.metadata['render_fps'] = 9999  # 解除 FPS 限制
+    env = CustomFrameSkip(env, skip=4)
+    env = TimeLimit(env, max_episode_steps=2000)  # Extend time per episode
+    env.metadata['render_fps'] = 9999  # No FPS cap
     return env
 
-# ===========================
-# 4️⃣ DQN 神经网络定义
-# ===========================
+
+# 4. DQN Network
+
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
@@ -77,9 +77,9 @@ class DQN(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-# ===========================
-# 5️⃣ Replay Buffer (经验回放)
-# ===========================
+
+# 5. Replay Buffer
+
 class ReplayBuffer:
     def __init__(self, capacity):
         self.buffer = deque(maxlen=capacity)
@@ -88,7 +88,8 @@ class ReplayBuffer:
         self.buffer.append((state, action, reward, next_state, done))
 
     def sample(self, batch_size):
-        batch = random.sample(self.buffer, min(len(self.buffer), batch_size * 2))  # 🔥 让采样范围更广
+        # Sample from a larger set to increase variation
+        batch = random.sample(self.buffer, min(len(self.buffer), batch_size * 2))
         batch = random.sample(batch, batch_size)
         states, actions, rewards, next_states, dones = zip(*batch)
         return (
@@ -102,21 +103,21 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
 
-# ===========================
-# 6️⃣ 奖励函数（鼓励 AI 通过关卡）
-# ===========================
+
+# 6. Reward Function
+
 def compute_reward(info, step):
     reward = info['score'] * 0.01
     reward += (info['x_pos'] - info.get('prev_x_pos', 0)) * 0.1
     info['prev_x_pos'] = info['x_pos']
-    reward -= 0.02  # 🔥 让 AI 更敢探索，而不会因惩罚太大而不敢动
+    reward -= 0.02  # Small penalty to encourage exploration
     if info.get('flag_get', False):  
-        reward += 1000  # 过关奖励
+        reward += 1000  # Level clear bonus
     return reward
 
-# ===========================
-# 7️⃣ 训练部分
-# ===========================
+
+# 7. Training Loop
+
 def train():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -131,7 +132,7 @@ def train():
     epsilon = EPSILON_START
     steps_done = 0
 
-    env = make_env(0)  # 只创建一个环境，防止重复创建窗口
+    env = make_env(0)  # Create a single environment instance
     for episode in range(1, NUM_EPISODES + 1):
         state = env.reset()
         total_reward = 0
@@ -144,6 +145,8 @@ def train():
 
         for step in range(1, MAX_STEPS + 1):
             env.render()
+
+            # ε-greedy action selection
             if random.random() < epsilon:
                 action = env.action_space.sample()
             else:
@@ -184,18 +187,18 @@ def train():
         epsilon = max(EPSILON_END, EPSILON_START - steps_done / EPSILON_DECAY)
         print(f"Episode {episode}/{NUM_EPISODES} | Reward: {total_reward:.2f} | Epsilon: {epsilon:.4f}")
 
-    env.close()  # 训练完成后关闭窗口
+    env.close()
 
-# ===========================
-# 8️⃣ 图像预处理
-# ===========================
+
+# 8. Frame Preprocessing
+
 def preprocess(obs):
     obs = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
     obs = cv2.resize(obs, (84, 84), interpolation=cv2.INTER_AREA)
     return np.array(obs, dtype=np.float32) / 255.0
 
-# ===========================
-# 9️⃣ 运行训练
-# ===========================
+
+# 9. Start Training
+
 if __name__ == '__main__':
     train()
