@@ -11,7 +11,7 @@ from nes_py.wrappers import JoypadSpace
 from wrappers import *
 
 
-# Same as duel_dqn.mlp (you can make model.py to avoid duplication.)
+# Same as duel_dqn.mlp
 class model(nn.Module):
     def __init__(self, n_frame, n_action, device):
         super(model, self).__init__()
@@ -108,9 +108,9 @@ if __name__ == "__main__":
 
         time.sleep(0.001)
 
-    # After the game ends, show final score and stage
+
     print("Total score : %f | stage : %d" % (total_score, stage))
 
-    # Turn off interactive mode
+
     plt.ioff()
     plt.show()
