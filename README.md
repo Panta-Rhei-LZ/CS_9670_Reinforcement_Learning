@@ -17,3 +17,8 @@ Before running the project, ensure you have Python 3.8 or higher installed. If y
    ```bash
    pip install -r requirements.txt
    ```
+   
+3. **Run**:  
+   ```bash
+   Run main.py to start
+   ```
