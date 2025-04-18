@@ -4,4 +4,4 @@ Check `Final_Double_DQN.ipynb` for code implementation.
 
 version requirements in `requirements.txt`
 
-`checkpoints` and `model update` recorded results and model weights.
+`checkpoints` and `model updates` recorded intermediate model_weights/results
